@@ -14,6 +14,7 @@ const isPublicApiRoute = createRouteMatcher([
 
 export default clerkMiddleware((auth, req) => {
     const {userId} = auth();
+    console.log(userId);
     const currentUrl = new URL(req.url)
      const isAccessingDashboard = currentUrl.pathname === "/home"
      const isApiRequest = currentUrl.pathname.startsWith("/api")
