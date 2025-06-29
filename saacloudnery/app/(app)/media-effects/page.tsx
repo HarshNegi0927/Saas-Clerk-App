@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react"
 import { useDropzone } from "react-dropzone"
-import { Wand2, Download, Share2, ImageIcon, Video, Zap, Palette, Scissors, Sparkles } from "lucide-react"
+import { Wand2, Download, Share2, ImageIcon, Video, Zap, Palette, Scissors, Sparkles, AlertCircle } from "lucide-react"
 
 interface UploadedMedia {
   publicId: string
@@ -35,6 +35,7 @@ export default function MediaEffectsPage() {
   const [availableEffects, setAvailableEffects] = useState<AvailableEffects | null>(null)
   const [activeCategory, setActiveCategory] = useState("compression")
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [transformError, setTransformError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchAvailableEffects()
@@ -46,6 +47,8 @@ export default function MediaEffectsPage() {
       if (response.ok) {
         const data = await response.json()
         setAvailableEffects(data.effects)
+      } else {
+        console.error("Failed to fetch effects")
       }
     } catch (error) {
       console.error("Failed to fetch effects:", error)
@@ -60,7 +63,6 @@ export default function MediaEffectsPage() {
     setUploadError(null)
 
     try {
-      // Use our signed upload API instead of direct Cloudinary upload
       const formData = new FormData()
       formData.append("file", file)
 
@@ -69,8 +71,9 @@ export default function MediaEffectsPage() {
         body: formData,
       })
 
-      if (response.ok) {
-        const data = await response.json()
+      const data = await response.json()
+
+      if (response.ok && data.success) {
         setUploadedMedia({
           publicId: data.publicId,
           originalUrl: data.secureUrl,
@@ -78,9 +81,10 @@ export default function MediaEffectsPage() {
           size: file.size,
           mediaType: data.resourceType,
         })
+        console.log("Upload successful:", data)
       } else {
-        const errorData = await response.json()
-        setUploadError(errorData.error || "Upload failed")
+        setUploadError(data.error || "Upload failed")
+        console.error("Upload error:", data)
       }
     } catch (error) {
       console.error("Upload failed:", error)
@@ -104,8 +108,15 @@ export default function MediaEffectsPage() {
     if (!uploadedMedia || selectedEffects.length === 0) return
 
     setTransforming(true)
+    setTransformError(null)
 
     try {
+      console.log("Applying effects:", {
+        publicId: uploadedMedia.publicId,
+        effects: selectedEffects,
+        mediaType: uploadedMedia.mediaType,
+      })
+
       const response = await fetch("/api/media-effects", {
         method: "POST",
         headers: {
@@ -118,8 +129,10 @@ export default function MediaEffectsPage() {
         }),
       })
 
-      if (response.ok) {
-        const data = await response.json()
+      const data = await response.json()
+      console.log("Transform response:", data)
+
+      if (response.ok && data.success) {
         setUploadedMedia((prev) =>
           prev
             ? {
@@ -128,11 +141,33 @@ export default function MediaEffectsPage() {
               }
             : null,
         )
+      } else {
+        setTransformError(data.error || "Transformation failed")
+        console.error("Transform error:", data)
       }
     } catch (error) {
       console.error("Transformation failed:", error)
+      setTransformError("Transformation failed. Please try again.")
     } finally {
       setTransforming(false)
+    }
+  }
+
+  const downloadMedia = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url)
+      const blob = await response.blob()
+      const downloadUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = downloadUrl
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(downloadUrl)
+    } catch (error) {
+      console.error("Download failed:", error)
+      alert("Download failed. Please try again.")
     }
   }
 
@@ -171,19 +206,7 @@ export default function MediaEffectsPage() {
             <div className="card-body">
               {uploadError && (
                 <div className="alert alert-error mb-4">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="stroke-current shrink-0 h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                  <AlertCircle className="h-6 w-6" />
                   <span>{uploadError}</span>
                 </div>
               )}
@@ -286,6 +309,13 @@ export default function MediaEffectsPage() {
                   Apply Effects & Transformations
                 </h2>
 
+                {transformError && (
+                  <div className="alert alert-error mb-4">
+                    <AlertCircle className="h-6 w-6" />
+                    <span>{transformError}</span>
+                  </div>
+                )}
+
                 {/* Category Tabs */}
                 <div className="tabs tabs-boxed mb-6 overflow-x-auto">
                   {availableEffects &&
@@ -368,15 +398,20 @@ export default function MediaEffectsPage() {
 
                   {uploadedMedia.transformedUrl && (
                     <>
-                      <a href={uploadedMedia.transformedUrl} download className="btn btn-outline">
+                      <button
+                        className="btn btn-outline"
+                        onClick={() =>
+                          downloadMedia(uploadedMedia.transformedUrl!, `processed_${uploadedMedia.fileName}`)
+                        }
+                      >
                         <Download className="w-4 h-4" />
                         Download
-                      </a>
+                      </button>
 
                       <button
                         className="btn btn-outline"
                         onClick={() => {
-                          window.location.href = `/social-share?url=${encodeURIComponent(uploadedMedia.transformedUrl)}`
+                          window.location.href = `/social-share?url=${encodeURIComponent(uploadedMedia.transformedUrl!)}`
                         }}
                       >
                         <Share2 className="w-4 h-4" />
@@ -391,6 +426,7 @@ export default function MediaEffectsPage() {
                       setUploadedMedia(null)
                       setSelectedEffects([])
                       setUploadError(null)
+                      setTransformError(null)
                     }}
                   >
                     Upload New Media
@@ -408,6 +444,17 @@ export default function MediaEffectsPage() {
                         </div>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* Debug Info */}
+                {uploadedMedia && (
+                  <div className="mt-6 p-4 bg-base-300 rounded-lg text-sm">
+                    <h3 className="font-semibold mb-2">Debug Info:</h3>
+                    <p>Public ID: {uploadedMedia.publicId}</p>
+                    <p>Media Type: {uploadedMedia.mediaType}</p>
+                    <p>Original URL: {uploadedMedia.originalUrl}</p>
+                    {uploadedMedia.transformedUrl && <p>Transformed URL: {uploadedMedia.transformedUrl}</p>}
                   </div>
                 )}
               </div>
