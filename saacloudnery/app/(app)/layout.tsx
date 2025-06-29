@@ -1,104 +1,124 @@
+"use client"
+
 import type React from "react"
-import { ClerkProvider } from "@clerk/nextjs"
-import { LayoutDashboardIcon, Share2Icon, UploadIcon, Wand2 } from "lucide-react"
+import { useState } from "react"
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
+import { useClerk, useUser } from "@clerk/nextjs"
+import { LogOutIcon, MenuIcon, LayoutDashboardIcon, Share2Icon, UploadIcon, ImageIcon, Wand2 } from "lucide-react"
+
+const sidebarItems = [
+  { href: "/home", icon: LayoutDashboardIcon, label: "Home Page" },
+  { href: "/social-share", icon: Share2Icon, label: "Social Share" },
+  { href: "/video-upload", icon: UploadIcon, label: "Video Upload" },
+  { href: "/media-effects", icon: Wand2, label: "Media Effects" },
+]
 
 export default function AppLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
-  const sidebarItems = [
-    { href: "/home", icon: LayoutDashboardIcon, label: "Home Page" },
-    { href: "/social-share", icon: Share2Icon, label: "Social Share" },
-    { href: "/video-upload", icon: UploadIcon, label: "Video Upload" },
-    { href: "/media-effects", icon: Wand2, label: "Media Effects" },
-  ]
+}>) {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const pathname = usePathname()
+  const router = useRouter()
+  const { signOut } = useClerk()
+  const { user } = useUser()
+
+  const handleLogoClick = () => {
+    router.push("/")
+  }
+
+  const handleSignOut = async () => {
+    await signOut()
+  }
 
   return (
-    <ClerkProvider
-      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-      signInUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL}
-      signUpUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL}
-      signInFallbackRedirectUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL}
-      signUpFallbackRedirectUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL}
-    >
-      <div className="min-h-screen">
-        {/* Navigation */}
-        <div className="navbar bg-base-100 shadow-lg">
-          <div className="navbar-start">
-            <div className="dropdown">
-              <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h8m-8 6h16" />
-                </svg>
-              </div>
-              <ul
-                tabIndex={0}
-                className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
-              >
-                <li>
-                  <a href="/home">Home</a>
-                </li>
-                <li>
-                  <a href="/video-upload">Video Upload</a>
-                </li>
-                <li>
-                  <a href="/image-upload">Image Upload</a>
-                </li>
-                <li>
-                  <a href="/social-share">Social Share</a>
-                </li>
-              </ul>
+    <div className="drawer lg:drawer-open">
+      <input
+        id="sidebar-drawer"
+        type="checkbox"
+        className="drawer-toggle"
+        checked={sidebarOpen}
+        onChange={() => setSidebarOpen(!sidebarOpen)}
+      />
+      <div className="drawer-content flex flex-col">
+        {/* Navbar */}
+        <header className="w-full bg-base-200">
+          <div className="navbar max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex-none lg:hidden">
+              <label htmlFor="sidebar-drawer" className="btn btn-square btn-ghost drawer-button">
+                <MenuIcon />
+              </label>
             </div>
-            <a href="/home" className="btn btn-ghost text-xl">
-              MediaVault
-            </a>
-          </div>
-
-          <div className="navbar-center hidden lg:flex">
-            <ul className="menu menu-horizontal px-1">
-              <li>
-                <a href="/home">Home</a>
-              </li>
-              <li>
-                <a href="/video-upload">Video Upload</a>
-              </li>
-              <li>
-                <a href="/image-upload">Image Upload</a>
-              </li>
-              <li>
-                <a href="/social-share">Social Share</a>
-              </li>
-            </ul>
-          </div>
-
-          <div className="navbar-end">
-            <div className="dropdown dropdown-end">
-              <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
-                <div className="w-10 rounded-full">
-                  <img alt="User" src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+            <div className="flex-1">
+              <Link href="/" onClick={handleLogoClick}>
+                <div className="btn btn-ghost normal-case text-2xl font-bold tracking-tight cursor-pointer">
+                  Cloudinary Showcase
                 </div>
-              </div>
-              <ul
-                tabIndex={0}
-                className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
-              >
-                <li>
-                  <a>Profile</a>
-                </li>
-                <li>
-                  <a>Settings</a>
-                </li>
-                <li>
-                  <a>Logout</a>
-                </li>
-              </ul>
+              </Link>
+            </div>
+            <div className="flex-none flex items-center space-x-4">
+              {user && (
+                <>
+                  <div className="avatar">
+                    <div className="w-8 h-8 rounded-full">
+                      <img
+                        src={user.imageUrl || "/placeholder.svg"}
+                        alt={user.username || user.emailAddresses[0].emailAddress}
+                      />
+                    </div>
+                  </div>
+                  <span className="text-sm truncate max-w-xs lg:max-w-md">
+                    {user.username || user.emailAddresses[0].emailAddress}
+                  </span>
+                  <button onClick={handleSignOut} className="btn btn-ghost btn-circle">
+                    <LogOutIcon className="h-6 w-6" />
+                  </button>
+                </>
+              )}
             </div>
           </div>
-        </div>
+        </header>
 
-        {children}
+        {/* Page content */}
+        <main className="flex-grow">
+          <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 my-8">{children}</div>
+        </main>
       </div>
-    </ClerkProvider>
+
+      <div className="drawer-side">
+        <label htmlFor="sidebar-drawer" className="drawer-overlay"></label>
+        <aside className="bg-base-200 w-64 h-full flex flex-col">
+          <div className="flex items-center justify-center py-4">
+            <ImageIcon className="w-10 h-10 text-primary" />
+          </div>
+          <ul className="menu p-4 w-full text-base-content flex-grow">
+            {sidebarItems.map((item) => (
+              <li key={item.href} className="mb-2">
+                <Link
+                  href={item.href}
+                  className={`flex items-center space-x-4 px-4 py-2 rounded-lg ${
+                    pathname === item.href ? "bg-primary text-white" : "hover:bg-base-300"
+                  }`}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <item.icon className="w-6 h-6" />
+                  <span>{item.label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {user && (
+            <div className="p-4">
+              <button onClick={handleSignOut} className="btn btn-outline btn-error w-full">
+                <LogOutIcon className="mr-2 h-5 w-5" />
+                Sign Out
+              </button>
+            </div>
+          )}
+        </aside>
+      </div>
+    </div>
   )
 }
