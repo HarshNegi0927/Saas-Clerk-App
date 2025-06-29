@@ -192,272 +192,244 @@ export default function MediaEffectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-base-200 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 p-4">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Media Effects & Compression</h1>
-          <p className="text-base-content/70">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Media Effects & Compression</h1>
+          <p className="text-lg text-gray-600">
             Upload images or videos and apply professional effects, compression, and transformations
           </p>
         </div>
 
         {!uploadedMedia ? (
-          <div className="card bg-base-100 shadow-lg">
-            <div className="card-body">
-              {uploadError && (
-                <div className="alert alert-error mb-4">
-                  <AlertCircle className="h-6 w-6" />
-                  <span>{uploadError}</span>
+          <div className="max-w-2xl mx-auto">
+            {uploadError && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <span>{uploadError}</span>
+              </div>
+            )}
+
+            <div className="bg-white rounded-xl shadow-lg p-8">
+              {uploading ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Uploading media...</h3>
+                  <p className="text-gray-600">This may take a moment for large files</p>
+                </div>
+              ) : (
+                <div
+                  {...getRootProps()}
+                  className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
+                    isDragActive
+                      ? "border-blue-400 bg-blue-50"
+                      : "border-gray-300 hover:border-blue-400 hover:bg-gray-50"
+                  }`}
+                >
+                  <input {...getInputProps()} />
+                  <div className="w-12 h-12 text-gray-400 mx-auto mb-4">📁</div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {isDragActive ? "Drop your media here" : "Drag & drop your media here"}
+                  </h3>
+                  <p className="text-gray-600 mb-4">or browse files</p>
+                  <div className="text-sm text-gray-500">
+                    <p>Supports: Images (JPG, PNG, GIF, WebP) & Videos (MP4, AVI, MOV, WebM)</p>
+                    <p>Max file size: 100MB</p>
+                  </div>
                 </div>
               )}
-
-              <div
-                {...getRootProps()}
-                className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
-                  isDragActive ? "border-primary bg-primary/10" : "border-base-300 hover:border-primary"
-                }`}
-              >
-                <input {...getInputProps()} />
-                {uploading ? (
-                  <div className="space-y-4">
-                    <span className="loading loading-spinner loading-lg text-primary"></span>
-                    <p className="text-lg font-semibold">Uploading media...</p>
-                    <p className="text-sm text-base-content/70">This may take a moment for large files</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex justify-center space-x-4">
-                      <ImageIcon className="w-16 h-16 text-primary" />
-                      <Video className="w-16 h-16 text-secondary" />
-                    </div>
-                    <div>
-                      <p className="text-lg font-semibold mb-2">
-                        {isDragActive ? "Drop your media here" : "Drag & drop your media here"}
-                      </p>
-                      <p className="text-base-content/70">
-                        or <span className="text-primary font-semibold">browse files</span>
-                      </p>
-                    </div>
-                    <div className="text-sm text-base-content/50">
-                      Supports: Images (JPG, PNG, GIF, WebP) & Videos (MP4, AVI, MOV, WebM)
-                      <br />
-                      Max file size: 100MB
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="grid lg:grid-cols-2 gap-8">
             {/* Media Preview */}
-            <div className="card bg-base-100 shadow-lg">
-              <div className="card-body">
-                <h2 className="card-title mb-4">Media Preview</h2>
-                <div className="grid lg:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="font-semibold mb-2">Original</h3>
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Media Preview</h2>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Original</h3>
+                  <div className="bg-gray-100 rounded-lg p-4">
                     {uploadedMedia.mediaType === "video" ? (
-                      <video
-                        src={uploadedMedia.originalUrl}
-                        controls
-                        className="w-full rounded-lg"
-                        style={{ maxHeight: "300px" }}
-                      />
+                      <video src={uploadedMedia.originalUrl} controls className="w-full max-h-64 rounded-lg" />
                     ) : (
                       <img
                         src={uploadedMedia.originalUrl || "/placeholder.svg"}
-                        alt="Original"
-                        className="w-full rounded-lg object-contain"
-                        style={{ maxHeight: "300px" }}
+                        alt="Original media"
+                        className="w-full max-h-64 object-contain rounded-lg"
                       />
                     )}
-                    <p className="text-sm text-base-content/70 mt-2">
+                    <p className="text-sm text-gray-600 mt-2">
                       Size: {(uploadedMedia.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
-                  {uploadedMedia.transformedUrl && (
-                    <div>
-                      <h3 className="font-semibold mb-2">Processed</h3>
+                </div>
+
+                {uploadedMedia.transformedUrl && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">Processed</h3>
+                    <div className="bg-gray-100 rounded-lg p-4">
                       {uploadedMedia.mediaType === "video" ? (
-                        <video
-                          src={uploadedMedia.transformedUrl}
-                          controls
-                          className="w-full rounded-lg"
-                          style={{ maxHeight: "300px" }}
-                        />
+                        <video src={uploadedMedia.transformedUrl} controls className="w-full max-h-64 rounded-lg" />
                       ) : (
                         <img
                           src={uploadedMedia.transformedUrl || "/placeholder.svg"}
-                          alt="Processed"
-                          className="w-full rounded-lg object-contain"
-                          style={{ maxHeight: "300px" }}
+                          alt="Processed media"
+                          className="w-full max-h-64 object-contain rounded-lg"
                         />
                       )}
-                      <div className="badge badge-success mt-2">Optimized</div>
+                      <p className="text-sm text-green-600 mt-2 font-medium">Optimized</p>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Effects Panel */}
-            <div className="card bg-base-100 shadow-lg">
-              <div className="card-body">
-                <h2 className="card-title mb-4">
-                  <Wand2 className="w-6 h-6" />
-                  Apply Effects & Transformations
-                </h2>
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Apply Effects & Transformations</h2>
 
-                {transformError && (
-                  <div className="alert alert-error mb-4">
-                    <AlertCircle className="h-6 w-6" />
-                    <span>{transformError}</span>
-                  </div>
-                )}
+              {transformError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm">{transformError}</span>
+                </div>
+              )}
 
-                {/* Category Tabs */}
-                <div className="tabs tabs-boxed mb-6 overflow-x-auto">
+              {/* Category Tabs */}
+              <div className="mb-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {availableEffects &&
                     Object.keys(availableEffects).map((category) => {
                       const IconComponent = categoryIcons[category as keyof typeof categoryIcons]
                       return (
                         <button
                           key={category}
-                          className={`tab gap-2 whitespace-nowrap ${activeCategory === category ? "tab-active" : ""}`}
                           onClick={() => setActiveCategory(category)}
+                          className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-medium transition-all border-2 ${
+                            activeCategory === category
+                              ? "bg-blue-100 text-blue-700 border-blue-300"
+                              : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                          }`}
                         >
                           <IconComponent className="w-4 h-4" />
-                          {categoryNames[category as keyof typeof categoryNames]}
+                          <span className="hidden sm:inline">
+                            {categoryNames[category as keyof typeof categoryNames]}
+                          </span>
                         </button>
                       )
                     })}
                 </div>
+              </div>
 
-                {/* Effects Grid */}
-                {availableEffects && availableEffects[activeCategory as keyof AvailableEffects] && (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              {/* Effects Grid */}
+              {availableEffects && availableEffects[activeCategory as keyof AvailableEffects] && (
+                <div className="mb-6 max-h-64 overflow-y-auto">
+                  <div className="space-y-3">
                     {Object.entries(availableEffects[activeCategory as keyof AvailableEffects]).map(
                       ([effectId, description]) => (
-                        <label key={effectId} className="cursor-pointer">
-                          <div
-                            className={`card card-compact border-2 transition-colors ${
-                              selectedEffects.includes(effectId)
-                                ? "border-primary bg-primary/10"
-                                : "border-base-300 hover:border-primary/50"
-                            }`}
-                          >
-                            <div className="card-body">
-                              <div className="flex items-start space-x-3">
-                                <input
-                                  type="checkbox"
-                                  className="checkbox checkbox-primary mt-1"
-                                  checked={selectedEffects.includes(effectId)}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setSelectedEffects([...selectedEffects, effectId])
-                                    } else {
-                                      setSelectedEffects(selectedEffects.filter((id) => id !== effectId))
-                                    }
-                                  }}
-                                />
-                                <div>
-                                  <div className="font-semibold text-sm capitalize">
-                                    {effectId.replace(/([A-Z])/g, " $1").trim()}
-                                  </div>
-                                  <div className="text-xs text-base-content/70">{description}</div>
-                                </div>
-                              </div>
+                        <label
+                          key={effectId}
+                          className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedEffects.includes(effectId)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedEffects([...selectedEffects, effectId])
+                              } else {
+                                setSelectedEffects(selectedEffects.filter((id) => id !== effectId))
+                              }
+                            }}
+                            className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">
+                              {effectId.replace(/([A-Z])/g, " $1").trim()}
                             </div>
+                            <div className="text-sm text-gray-600">{description}</div>
                           </div>
                         </label>
                       ),
                     )}
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-4">
-                  <button
-                    className="btn btn-primary"
-                    onClick={applyEffects}
-                    disabled={selectedEffects.length === 0 || transforming}
-                  >
-                    {transforming ? (
-                      <>
-                        <span className="loading loading-spinner loading-sm"></span>
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="w-4 h-4" />
-                        Apply Effects ({selectedEffects.length})
-                      </>
-                    )}
-                  </button>
-
-                  {uploadedMedia.transformedUrl && (
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={applyEffects}
+                  disabled={selectedEffects.length === 0 || transforming}
+                  className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {transforming ? (
                     <>
-                      <button
-                        className="btn btn-outline"
-                        onClick={() =>
-                          downloadMedia(uploadedMedia.transformedUrl!, `processed_${uploadedMedia.fileName}`)
-                        }
-                      >
-                        <Download className="w-4 h-4" />
-                        Download
-                      </button>
-
-                      <button
-                        className="btn btn-outline"
-                        onClick={() => {
-                          window.location.href = `/social-share?url=${encodeURIComponent(uploadedMedia.transformedUrl!)}`
-                        }}
-                      >
-                        <Share2 className="w-4 h-4" />
-                        Share
-                      </button>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4" />
+                      Apply Effects ({selectedEffects.length})
                     </>
                   )}
+                </button>
 
-                  <button
-                    className="btn btn-ghost"
-                    onClick={() => {
-                      setUploadedMedia(null)
-                      setSelectedEffects([])
-                      setUploadError(null)
-                      setTransformError(null)
-                    }}
-                  >
-                    Upload New Media
-                  </button>
-                </div>
-
-                {/* Selected Effects Summary */}
-                {selectedEffects.length > 0 && (
-                  <div className="mt-6 p-4 bg-base-200 rounded-lg">
-                    <h3 className="font-semibold mb-2">Selected Effects:</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedEffects.map((effect) => (
-                        <div key={effect} className="badge badge-primary">
-                          {effect.replace(/([A-Z])/g, " $1").trim()}
-                        </div>
-                      ))}
-                    </div>
+                {uploadedMedia.transformedUrl && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() =>
+                        downloadMedia(uploadedMedia.transformedUrl!, `processed_${uploadedMedia.fileName}`)
+                      }
+                      className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download
+                    </button>
+                    <button
+                      onClick={() => {
+                        window.location.href = `/social-share?url=${encodeURIComponent(uploadedMedia.transformedUrl!)}`
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      Share
+                    </button>
                   </div>
                 )}
 
-                {/* Debug Info */}
-                {uploadedMedia && (
-                  <div className="mt-6 p-4 bg-base-300 rounded-lg text-sm">
-                    <h3 className="font-semibold mb-2">Debug Info:</h3>
-                    <p>Public ID: {uploadedMedia.publicId}</p>
-                    <p>Media Type: {uploadedMedia.mediaType}</p>
-                    <p>Original URL: {uploadedMedia.originalUrl}</p>
-                    {uploadedMedia.transformedUrl && <p>Transformed URL: {uploadedMedia.transformedUrl}</p>}
-                  </div>
-                )}
+                <button
+                  onClick={() => {
+                    setUploadedMedia(null)
+                    setSelectedEffects([])
+                    setUploadError(null)
+                    setTransformError(null)
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                >
+                  Upload New Media
+                </button>
               </div>
+
+              {/* Selected Effects Summary */}
+              {selectedEffects.length > 0 && (
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">Selected Effects:</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedEffects.map((effect) => (
+                      <span
+                        key={effect}
+                        className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                      >
+                        {effect.replace(/([A-Z])/g, " $1").trim()}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
