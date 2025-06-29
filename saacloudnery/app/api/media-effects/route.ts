@@ -15,8 +15,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Public ID is required" }, { status: 400 })
     }
 
+    if (!effects || effects.length === 0) {
+      return NextResponse.json({ error: "No effects specified" }, { status: 400 })
+    }
+
     // Build Cloudinary transformation URL
-    const baseUrl = `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}`
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+    if (!cloudName) {
+      return NextResponse.json({ error: "Cloudinary not configured" }, { status: 500 })
+    }
+
+    const baseUrl = `https://res.cloudinary.com/${cloudName}`
 
     // Advanced transformation effects
     const effectsMap = {
@@ -58,21 +67,28 @@ export async function POST(request: NextRequest) {
     }
 
     // Build transformation string
-    let transformString = ""
-    if (effects && Array.isArray(effects)) {
-      const transforms = effects
-        .map((effect) => effectsMap[effect as keyof typeof effectsMap])
-        .filter(Boolean)
-        .join(",")
-      transformString = transforms ? `/${transforms}` : ""
+    const transforms = effects
+      .map((effect: string) => effectsMap[effect as keyof typeof effectsMap])
+      .filter(Boolean)
+      .join(",")
+
+    if (!transforms) {
+      return NextResponse.json({ error: "No valid effects found" }, { status: 400 })
     }
 
     const mediaPath = mediaType === "video" ? "video" : "image"
     const originalUrl = `${baseUrl}/${mediaPath}/upload/${publicId}`
-    const transformedUrl = `${baseUrl}/${mediaPath}/upload${transformString}/${publicId}`
+    const transformedUrl = `${baseUrl}/${mediaPath}/upload/${transforms}/${publicId}`
 
     // Calculate estimated compression (mock calculation)
-    const estimatedCompression = effects?.includes("autoCompress") ? "60-80%" : "0%"
+    const estimatedCompression = effects.includes("autoCompress") ? "60-80%" : "0%"
+
+    console.log("Transformation applied:", {
+      publicId,
+      effects,
+      transforms,
+      transformedUrl,
+    })
 
     return NextResponse.json({
       success: true,
@@ -82,7 +98,7 @@ export async function POST(request: NextRequest) {
       publicId,
       mediaType,
       estimatedCompression,
-      transformationString: transformString,
+      transformationString: transforms,
     })
   } catch (error) {
     console.error("Media effects error:", error)
