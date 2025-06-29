@@ -1,4 +1,5 @@
 "use client"
+
 import { useState, useCallback, useEffect } from "react"
 import { useDropzone } from "react-dropzone"
 import { Wand2, Download, Share2, ImageIcon, Video, Zap, Palette, Scissors, Sparkles } from "lucide-react"
@@ -33,6 +34,7 @@ export default function MediaEffectsPage() {
   const [transforming, setTransforming] = useState(false)
   const [availableEffects, setAvailableEffects] = useState<AvailableEffects | null>(null)
   const [activeCategory, setActiveCategory] = useState("compression")
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchAvailableEffects()
@@ -55,33 +57,34 @@ export default function MediaEffectsPage() {
     if (!file) return
 
     setUploading(true)
+    setUploadError(null)
 
     try {
-      const mediaType = file.type.startsWith("video/") ? "video" : "image"
+      // Use our signed upload API instead of direct Cloudinary upload
       const formData = new FormData()
       formData.append("file", file)
-      formData.append("upload_preset", "ml_default") // You'll need to configure this
 
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/${mediaType}/upload`,
-        {
-          method: "POST",
-          body: formData,
-        },
-      )
+      const response = await fetch("/api/cloudinary-upload", {
+        method: "POST",
+        body: formData,
+      })
 
       if (response.ok) {
         const data = await response.json()
         setUploadedMedia({
-          publicId: data.public_id,
-          originalUrl: data.secure_url,
+          publicId: data.publicId,
+          originalUrl: data.secureUrl,
           fileName: file.name,
           size: file.size,
-          mediaType,
+          mediaType: data.resourceType,
         })
+      } else {
+        const errorData = await response.json()
+        setUploadError(errorData.error || "Upload failed")
       }
     } catch (error) {
       console.error("Upload failed:", error)
+      setUploadError("Upload failed. Please try again.")
     } finally {
       setUploading(false)
     }
@@ -94,6 +97,7 @@ export default function MediaEffectsPage() {
       "video/*": [".mp4", ".avi", ".mov", ".wmv", ".flv", ".webm"],
     },
     maxFiles: 1,
+    maxSize: 100 * 1024 * 1024, // 100MB limit
   })
 
   const applyEffects = async () => {
@@ -165,6 +169,25 @@ export default function MediaEffectsPage() {
         {!uploadedMedia ? (
           <div className="card bg-base-100 shadow-lg">
             <div className="card-body">
+              {uploadError && (
+                <div className="alert alert-error mb-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="stroke-current shrink-0 h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span>{uploadError}</span>
+                </div>
+              )}
+
               <div
                 {...getRootProps()}
                 className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
@@ -176,6 +199,7 @@ export default function MediaEffectsPage() {
                   <div className="space-y-4">
                     <span className="loading loading-spinner loading-lg text-primary"></span>
                     <p className="text-lg font-semibold">Uploading media...</p>
+                    <p className="text-sm text-base-content/70">This may take a moment for large files</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -193,6 +217,8 @@ export default function MediaEffectsPage() {
                     </div>
                     <div className="text-sm text-base-content/50">
                       Supports: Images (JPG, PNG, GIF, WebP) & Videos (MP4, AVI, MOV, WebM)
+                      <br />
+                      Max file size: 100MB
                     </div>
                   </div>
                 )}
@@ -261,14 +287,14 @@ export default function MediaEffectsPage() {
                 </h2>
 
                 {/* Category Tabs */}
-                <div className="tabs tabs-boxed mb-6">
+                <div className="tabs tabs-boxed mb-6 overflow-x-auto">
                   {availableEffects &&
                     Object.keys(availableEffects).map((category) => {
                       const IconComponent = categoryIcons[category as keyof typeof categoryIcons]
                       return (
                         <button
                           key={category}
-                          className={`tab gap-2 ${activeCategory === category ? "tab-active" : ""}`}
+                          className={`tab gap-2 whitespace-nowrap ${activeCategory === category ? "tab-active" : ""}`}
                           onClick={() => setActiveCategory(category)}
                         >
                           <IconComponent className="w-4 h-4" />
@@ -364,6 +390,7 @@ export default function MediaEffectsPage() {
                     onClick={() => {
                       setUploadedMedia(null)
                       setSelectedEffects([])
+                      setUploadError(null)
                     }}
                   >
                     Upload New Media
