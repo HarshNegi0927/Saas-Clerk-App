@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useCallback, useEffect } from "react"
 import { useDropzone } from "react-dropzone"
 import { Wand2, Download, Share2, ImageIcon, Video, Zap, Palette, Scissors, Sparkles } from "lucide-react"
