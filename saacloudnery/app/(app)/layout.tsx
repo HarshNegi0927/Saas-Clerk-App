@@ -3,21 +3,15 @@
 import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { useClerk, useUser } from "@clerk/nextjs"
 import {
   LogOutIcon, MenuIcon, LayoutDashboardIcon, Share2Icon,
-  UploadIcon, ImageIcon, Wand2, Search, History,
-  BarChart2, ChevronRight
+  ImageIcon, Wand2, History, ChevronRight
 } from "lucide-react"
-import DarkModeToggle from "@/components/Darkmodetoggle"
-import CreditsWidget from "@/components/Creditswidget"
 
 const sidebarItems = [
-  { href: "/analytics", icon: BarChart2, label: "Analytics", badge: "New" },
   { href: "/home", icon: LayoutDashboardIcon, label: "Home" },
-  { href: "/smart-search", icon: Search, label: "AI Smart Search", badge: "AI" },
-  { href: "/video-upload", icon: UploadIcon, label: "Video Upload" },
   { href: "/media-effects", icon: Wand2, label: "Media Effects" },
   { href: "/social-share", icon: Share2Icon, label: "Social Share" },
   { href: "/history", icon: History, label: "History" },
@@ -26,7 +20,6 @@ const sidebarItems = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
-  const router = useRouter()
   const { signOut } = useClerk()
   const { user } = useUser()
 
@@ -57,12 +50,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </div>
             <div className="flex-none flex items-center gap-3">
-              {/* Credits widget */}
-              <CreditsWidget />
-
-              {/* Dark mode */}
-              <DarkModeToggle />
-
               {user && (
                 <>
                   <div className="avatar">
@@ -122,15 +109,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   >
                     <item.icon className="w-4 h-4 flex-shrink-0" />
                     <span className="flex-1 text-sm">{item.label}</span>
-                    {item.badge && (
-                      <span className={`badge badge-xs ${
-                        active ? "bg-primary-content/20 text-primary-content border-0" :
-                        item.badge === "AI" ? "bg-purple-100 text-purple-700 border-0" :
-                        "badge-primary"
-                      }`}>
-                        {item.badge}
-                      </span>
-                    )}
                     {active && <ChevronRight className="w-3 h-3 opacity-60" />}
                   </Link>
                 </li>
