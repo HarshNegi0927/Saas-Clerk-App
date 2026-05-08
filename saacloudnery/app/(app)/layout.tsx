@@ -5,33 +5,32 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useClerk, useUser } from "@clerk/nextjs"
-import { LogOutIcon, MenuIcon, LayoutDashboardIcon, Share2Icon, UploadIcon, ImageIcon, Wand2 } from "lucide-react"
+import {
+  LogOutIcon, MenuIcon, LayoutDashboardIcon, Share2Icon,
+  UploadIcon, ImageIcon, Wand2, Search, History,
+  BarChart2, ChevronRight
+} from "lucide-react"
+import DarkModeToggle from "@/components/Darkmodetoggle"
+import CreditsWidget from "@/components/Creditswidget"
 
 const sidebarItems = [
-  { href: "/home", icon: LayoutDashboardIcon, label: "Home Page" },
-  { href: "/social-share", icon: Share2Icon, label: "Social Share" },
+  { href: "/analytics", icon: BarChart2, label: "Analytics", badge: "New" },
+  { href: "/home", icon: LayoutDashboardIcon, label: "Home" },
+  { href: "/smart-search", icon: Search, label: "AI Smart Search", badge: "AI" },
   { href: "/video-upload", icon: UploadIcon, label: "Video Upload" },
   { href: "/media-effects", icon: Wand2, label: "Media Effects" },
+  { href: "/social-share", icon: Share2Icon, label: "Social Share" },
+  { href: "/history", icon: History, label: "History" },
 ]
 
-export default function AppLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const { signOut } = useClerk()
   const { user } = useUser()
 
-  const handleLogoClick = () => {
-    router.push("/")
-  }
-
-  const handleSignOut = async () => {
-    await signOut()
-  }
+  const handleSignOut = async () => { await signOut() }
 
   return (
     <div className="drawer lg:drawer-open">
@@ -42,38 +41,43 @@ export default function AppLayout({
         checked={sidebarOpen}
         onChange={() => setSidebarOpen(!sidebarOpen)}
       />
-      <div className="drawer-content flex flex-col">
+
+      <div className="drawer-content flex flex-col min-h-screen">
         {/* Navbar */}
-        <header className="w-full bg-base-200">
-          <div className="navbar max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <header className="w-full bg-base-200/80 backdrop-blur-sm sticky top-0 z-30 border-b border-base-300">
+          <div className="navbar max-w-7xl mx-auto px-4">
             <div className="flex-none lg:hidden">
               <label htmlFor="sidebar-drawer" className="btn btn-square btn-ghost drawer-button">
-                <MenuIcon />
+                <MenuIcon className="w-5 h-5" />
               </label>
             </div>
             <div className="flex-1">
-              <Link href="/" onClick={handleLogoClick}>
-                <div className="btn btn-ghost normal-case text-2xl font-bold tracking-tight cursor-pointer">
-                  Cloudinary Showcase
-                </div>
+              <Link href="/" className="btn btn-ghost normal-case text-xl font-bold tracking-tight">
+                Cloudinary Showcase
               </Link>
             </div>
-            <div className="flex-none flex items-center space-x-4">
+            <div className="flex-none flex items-center gap-3">
+              {/* Credits widget */}
+              <CreditsWidget />
+
+              {/* Dark mode */}
+              <DarkModeToggle />
+
               {user && (
                 <>
                   <div className="avatar">
-                    <div className="w-8 h-8 rounded-full">
+                    <div className="w-8 h-8 rounded-full ring ring-primary ring-offset-base-100 ring-offset-1">
                       <img
                         src={user.imageUrl || "/placeholder.svg"}
-                        alt={user.username || user.emailAddresses[0].emailAddress}
+                        alt={user.username || "User"}
                       />
                     </div>
                   </div>
-                  <span className="text-sm truncate max-w-xs lg:max-w-md">
-                    {user.username || user.emailAddresses[0].emailAddress}
+                  <span className="text-sm font-medium hidden sm:block truncate max-w-32">
+                    {user.firstName || user.emailAddresses[0]?.emailAddress}
                   </span>
-                  <button onClick={handleSignOut} className="btn btn-ghost btn-circle">
-                    <LogOutIcon className="h-6 w-6" />
+                  <button onClick={handleSignOut} className="btn btn-ghost btn-circle btn-sm">
+                    <LogOutIcon className="h-4 w-4" />
                   </button>
                 </>
               )}
@@ -83,37 +87,81 @@ export default function AppLayout({
 
         {/* Page content */}
         <main className="flex-grow">
-          <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 my-8">{children}</div>
+          <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+            {children}
+          </div>
         </main>
       </div>
 
-      <div className="drawer-side">
-        <label htmlFor="sidebar-drawer" className="drawer-overlay"></label>
-        <aside className="bg-base-200 w-64 h-full flex flex-col">
-          <div className="flex items-center justify-center py-4">
-            <ImageIcon className="w-10 h-10 text-primary" />
+      {/* Sidebar */}
+      <div className="drawer-side z-40">
+        <label htmlFor="sidebar-drawer" className="drawer-overlay" />
+        <aside className="bg-base-200 w-64 h-full flex flex-col border-r border-base-300">
+          {/* Logo */}
+          <div className="flex items-center gap-3 px-5 py-5 border-b border-base-300">
+            <div className="p-1.5 bg-primary rounded-lg">
+              <ImageIcon className="w-5 h-5 text-primary-content" />
+            </div>
+            <span className="font-bold text-base-content">CloudSaaS</span>
           </div>
-          <ul className="menu p-4 w-full text-base-content flex-grow">
-            {sidebarItems.map((item) => (
-              <li key={item.href} className="mb-2">
-                <Link
-                  href={item.href}
-                  className={`flex items-center space-x-4 px-4 py-2 rounded-lg ${
-                    pathname === item.href ? "bg-primary text-white" : "hover:bg-base-300"
-                  }`}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <item.icon className="w-6 h-6" />
-                  <span>{item.label}</span>
-                </Link>
-              </li>
-            ))}
+
+          {/* Nav items */}
+          <ul className="menu p-3 w-full text-base-content flex-grow gap-0.5">
+            {sidebarItems.map((item) => {
+              const active = pathname === item.href
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
+                      active
+                        ? "bg-primary text-primary-content font-medium"
+                        : "hover:bg-base-300 text-base-content/70 hover:text-base-content"
+                    }`}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <item.icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="flex-1 text-sm">{item.label}</span>
+                    {item.badge && (
+                      <span className={`badge badge-xs ${
+                        active ? "bg-primary-content/20 text-primary-content border-0" :
+                        item.badge === "AI" ? "bg-purple-100 text-purple-700 border-0" :
+                        "badge-primary"
+                      }`}>
+                        {item.badge}
+                      </span>
+                    )}
+                    {active && <ChevronRight className="w-3 h-3 opacity-60" />}
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
+
+          {/* User section */}
           {user && (
-            <div className="p-4">
-              <button onClick={handleSignOut} className="btn btn-outline btn-error w-full">
-                <LogOutIcon className="mr-2 h-5 w-5" />
-                Sign Out
+            <div className="p-3 border-t border-base-300">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-base-100 mb-2">
+                <div className="avatar">
+                  <div className="w-8 h-8 rounded-full">
+                    <img src={user.imageUrl || "/placeholder.svg"} alt="User" />
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-base-content truncate">
+                    {user.firstName || "User"}
+                  </p>
+                  <p className="text-xs text-base-content/50 truncate">
+                    {user.emailAddresses[0]?.emailAddress}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="btn btn-outline btn-error btn-sm w-full gap-2"
+              >
+                <LogOutIcon className="h-3.5 w-3.5" />
+                Sign out
               </button>
             </div>
           )}

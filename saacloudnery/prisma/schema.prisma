@@ -18,3 +18,14 @@ model Video {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
+
+model TransformationHistory {
+  id             String   @id @default(cuid())
+  userId         String
+  publicId       String
+  originalUrl    String
+  transformedUrl String
+  effects        String[]
+  mediaType      String   @default("image")
+  createdAt      DateTime @default(now())
+}

@@ -105,6 +105,16 @@ export default function MediaEffectsPage() {
   })
 
   const applyEffects = async () => {
+    const creditRes = await fetch("/api/credits", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ operation: selectedEffects.includes("removeBackground") ? "removeBackground" : "autoCompress" })
+  })
+  if (!creditRes.ok) {
+    const err = await creditRes.json()
+    setTransformError(err.error || "Not enough credits")
+    return
+  }
     if (!uploadedMedia || selectedEffects.length === 0) return
 
     setTransforming(true)
@@ -141,6 +151,17 @@ export default function MediaEffectsPage() {
               }
             : null,
         )
+        await fetch("/api/history", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    publicId: uploadedMedia.publicId,
+    originalUrl: uploadedMedia.originalUrl,
+    transformedUrl: data.transformedUrl,
+    effects: selectedEffects,
+    mediaType: uploadedMedia.mediaType,
+  })
+})
       } else {
         setTransformError(data.error || "Transformation failed")
         console.error("Transform error:", data)
